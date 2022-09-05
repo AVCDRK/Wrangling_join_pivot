@@ -1,0 +1,224 @@
+---
+title: "Data Wrangling - Part III"
+subtitle: "StatPREP R Workshops"
+author: "Your Name here"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE, error = TRUE)
+library(tidyverse)
+library(fivethirtyeight)   # contains  masculinity data set we'll use
+library(nycflights13) # contains flights data for joining
+```
+
+# Data
+
+We're going to use a new dataset, 
+
+```{r}
+data("masculinity_survey")
+?masculinity_survey
+```
+
+This data is from the FiveThirtyEight story, [What Do Men Think It Means To Be A Man?](https://fivethirtyeight.com/features/what-do-men-think-it-means-to-be-a-man)
+
+By the end, we will try to reproduce the graphic about how often men try to be the one to pay on a date.
+
+![](img/pay_date.png)
+
+But first, we need to get the data into the right "shape"! Let's review some wrangling tasks. 
+
+First, let's just pull out the rows related to the question about paying on dates. (What function will you need for this?)
+
+```{r}
+masculinity_survey %>%
+  # fill in some commands here!
+```
+
+Now, let's narrow it down just to the variables we will need, which are `response`, `age_18_34`, `age_35_64`, and `age_65_over`. (What function will you need for this?)
+
+```{r}
+masculinity_survey %>%
+  # your code from above %>%
+  # more commands here
+```
+
+
+Finally, let's save this smaller dataset with a new name, `date_q`.
+
+```{r}
+# something new 
+# old code
+```
+
+
+# New wrangling tasks
+
+There are two **even more** advanced wrangling tasks you may need to do in order to get your data useable for analysis or visualization. They can be characterized as 
+
+- joins: `left_join`, `right_join`, `full_join` and `inner_join` are some of the most common versions, but there are more
+- pivots: `pivot_longer` and `pivot_wider`
+
+## Joins
+
+For the section on joins, we're going to start by playing with small, "toy" datasets. Run this chunk and look at the resulting datasets. 
+
+```{r}
+band <- tribble(
+   ~name,     ~band,
+  "Mick",  "Stones",
+  "John", "Beatles",
+  "Paul", "Beatles"
+)
+
+instrument <- tribble(
+    ~name,   ~plays,
+   "John", "guitar",
+   "Paul",   "bass",
+  "Keith", "guitar"
+)
+
+instrument2 <- tribble(
+    ~artist,   ~plays,
+   "John", "guitar",
+   "Paul",   "bass",
+  "Keith", "guitar"
+)
+```
+
+A join is useful when you want to combine information from two different datasets, typically to add more variables (although sometimes you're also adding more observations!)
+
+For example, we would use a join if we want a dataset that tells us which band each person is in, as well as the instrument they play. 
+
+The data wrangling with dplyr cheatsheet has some visualizations of how joins work, but it is sometimes easiest just to see it.
+
+Run this code. What is different about the four joins? Which do you think is most useful? 
+```{r}
+band %>% 
+  left_join(instrument, by = "name")
+band %>% 
+  right_join(instrument, by = "name")
+band %>% 
+  full_join(instrument, by = "name")
+band %>% 
+  inner_join(instrument, by = "name")
+```
+
+
+These examples all use `by = "name"` because both datasets have a variable called name. However, as long as the content of the variable can match up, the variable name does not need to. 
+
+```{r}
+band %>% 
+  left_join(instrument2, by = c("name" = "artist"))
+```
+
+### Your turn
+
+Now, we're going to play with some larger datasets from the nyflights package. 
+
+```{r}
+data(airlines)
+data(flights)
+?airlines
+?flights
+```
+
+We would like to join the `airlines` dataset to the `flights` dataset. Then, we want to compute and order the average arrival delays by airline. Display full names, no codes.
+
+```{r}
+flights %>%
+  drop_na(arr_delay) %>%
+  # write some code here! Use a *_join function
+  # more code here. Try some of your wrangling verbs from our refresher
+```
+
+
+
+## Pivots
+
+Pivots are a different type of data wrangling task. They take just one dataset, and make it either longer or wider. This is typically in the interest of making the dataset "tidy."
+
+A data set is tidy iff:
+
+- Each variable is in its own column
+- Each case is in its own row
+- Each value is in its own cell
+
+The pivot functions help do this by re-shaping the data
+
+- `pivot_longer` makes data longer, adding more observations
+- `pivot_wider` makes data wider, adding more variables
+
+Again, we'll start with toy examples. Run the code below, and think about the variables 
+
+```{r}
+cases <- tribble(
+  ~Country, ~"2011", ~"2012", ~"2013",
+      "FR",    7000,    6900,    7000,
+      "DE",    5800,    6000,    6200,
+      "US",   15000,   14000,   13000
+)
+
+pollution <- tribble(
+       ~city,   ~size, ~amount,
+  "New York", "large",      23,
+  "New York", "small",      14,
+    "London", "large",      22,
+    "London", "small",      16,
+   "Beijing", "large",     121,
+   "Beijing", "small",     56
+)
+```
+
+How many variables are in the `cases` dataset? How many should there be? 
+On a sheet of paper, draw what the dataset would look like if it had three variables,  **country**, **year**, **n**. 
+
+This data is longer, so we will use a `pivot_longer` to change its shape.
+
+```{r}
+cases %>%
+  pivot_longer(-Country, names_to = "year", values_to = "n")
+```
+
+Now, let's think about the `pollution` dataset. How many variables does it have? How many should there be? 
+On a sheet of paper, draw how this data set would look if it had the same values grouped into three columns: **city**, **large**, **small**
+
+That data is technically wider, so we will use a `pivot_wider` in order to reshape it.
+
+```{r}
+pollution %>%
+  pivot_wider(names_from = size, values_from = amount)
+```
+
+
+
+### Your turn 
+
+The last step to get that masculinity survey data into the right right "shape" for visualization is a pivot. Which kind of pivot do you think we want? 
+
+We want the data to have three variables, **response**, **age** and **percent**. See if you can use a `pivot_*` function to get that to happen. 
+
+
+```{r}
+date_q %>%
+  # pivot code
+```
+
+
+## Additional wrangling tasks
+
+There are many additional wrangling tasks that might be required to get data into the appropriate format for plotting. One that comes up frequently is related to **factor** variables, R's method of storing categorical data. The package `forcats` can help work with these types of variables. 
+
+```{r}
+# Reorder the factor levels
+date_q <- date_q %>%
+  mutate(response = fct_relevel(response, "No answer", "Never", "Rarely", "Sometimes", "Often", "Always"))
+
+# Make age a factor and rename the age groups in the data set
+date_q <- date_q %>%
+  mutate(age = as_factor(age)) %>%
+  mutate(age = fct_recode(age, "18-34" = "age_18_34", "35-64" = "age_35_64", "65 AND UP" = "age_65_over"))
+```
+
+Tomorrow, we'll bring this data back to recreate that graphic!
